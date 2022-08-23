@@ -9,27 +9,21 @@ try:
     import asyncio
     import requests
     import discum
-    from cymruwhois import Client
     from discord.ext import commands
     from colorama import init, Fore
 except Exception as e:
     print(f"Error, a module is missing, info below:\n{e}")
     exit()
 
-#discord token here
-token = ''
-#optional, put proxycheck.io and abuseipdb.com api key below
-proxycheckkey = ''
-abuseipdbkey = ''
-#default prefix is >>, change to whatever you want
+token = "Token goes here, obviously"
+proxycheckkey = 'proxycheck.io API Key here (OPTIONAL)'
+abuseipdbkey = 'AbuseIPDB API Key here (OPTIONAL)'
 prefix = ">>"
 
 sys.tracebacklimit = 0
 init()
-c = Client()
 bot = commands.Bot(prefix, self_bot=True)
-
-= 'https://discordapp.com/api/v6/users/@me'
+apiurl = 'https://discordapp.com/api/v6/users/@me'
 headers = { 'Authorization': f'{token}', 'Content-Type': 'application/json' }
 info = requests.get(apiurl, headers=headers).json()
 username = f'{info["username"]}#{info["discriminator"]}'
@@ -233,23 +227,22 @@ async def length(ctx, *, string):
 @bot.command()
 async def proxycheck(ctx, *, string):
     if str(ctx.message.author) == username:
-        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Checking if given IP ({ip}) is proxy or VPN")
-        ip = string
-        r = c.lookup(ip)
-        l = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719").json()
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Checking if given IP ({string}) is proxy or VPN")
+        l = requests.get(f"http://ip-api.com/json/{string}?fields=66846719").json()
+        xs = l["as"].split()[0]
         try:
             x = open('data/asn-list.txt', 'r')
             f = x.read().splitlines()
-            asn = r.asn
-            if r.asn in f:
-                print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible proxy via ASN comparison - IP: {ip}')
-                await ctx.message.edit(content=f'stxrm >> Detected possible proxy via ASN comparison - Info: \n```IP: {ip} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}```')
+            asn = xs
+            if xs in f:
+                print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible proxy via ASN comparison - IP: {string}')
+                await ctx.message.edit(content=f'stxrm >> Detected possible proxy via ASN comparison - Info: \n```IP: {string} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}```')
                 x.close()
             else:
                 try:
                     x.close()
-                    query = { 'ipAddress': f'{ip}', 'maxAgeInDays': '365', }
-                    headers = { 'Accept': 'application/json', 'Key': f'{apxkey}', }
+                    query = { 'ipAddress': f'{string}', 'maxAgeInDays': '365', }
+                    headers = { 'Accept': 'application/json', 'Key': f'{abuseipdbkey}', }
                     apx = requests.get("https://api.abuseipdb.com/api/v2/check", headers=headers, params=query)
                     apxr = json.loads(apx.text)
                     with open('abuseipdb.json', 'w') as f:                
@@ -260,29 +253,29 @@ async def proxycheck(ctx, *, string):
                         score = apxd["data"]["abuseConfidenceScore"]
                         reports = apxd["data"]["totalReports"]
 
-                    px = requests.get(f"http://proxycheck.io/v2/{ip}?key={pxkey}&vpn=1&asn=1").json()
-                    proxy = px[f"{ip}"]["proxy"]
-                    iptype = px[f"{ip}"]["type"]
+                    px = requests.get(f"http://proxycheck.io/v2/{string}?key={proxycheckkey}&vpn=1&asn=1").json()
+                    proxy = px[f"{string}"]["proxy"]
+                    iptype = px[f"{string}"]["type"]
                     if proxy == "yes":
-                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible proxy via proxycheck.io - IP: {ip}')
-                        await ctx.message.edit(content=f'stxrm >> Detected possible proxy via proxycheck.io - Info:\n```IP: {ip} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
+                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible proxy via proxycheck.io - IP: {string}')
+                        await ctx.message.edit(content=f'stxrm >> Detected possible proxy via proxycheck.io - Info:\n```IP: {string} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
                     elif iptype == "VPN":
-                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible VPN via proxycheck.io - IP: {ip}')
-                        await ctx.message.edit(content=f'stxrm >> Detected possible VPN via proxycheck.io - Info:\n```IP: {ip} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
+                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible VPN via proxycheck.io - IP: {string}')
+                        await ctx.message.edit(content=f'stxrm >> Detected possible VPN via proxycheck.io - Info:\n```IP: {string} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
                     elif score > 5 or reports > 2:
-                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible malicious IP via AbuseIPDB - IP: {ip}')
-                        await ctx.message.edit(content=f'stxrm >> Detected possible malicious IP via AbuseIPDB - Info:\n```IP: {ip} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
+                        print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected possible malicious IP via AbuseIPDB - IP: {string}')
+                        await ctx.message.edit(content=f'stxrm >> Detected possible malicious IP via AbuseIPDB - Info:\n```IP: {string} \nCountry: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
                     else:
                         print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Detected no Proxy/VPN, if you are 100% sure this is a Proxy then it may be a Residental Proxy.')
                         await ctx.message.edit(content=f'stxrm >> No Proxy/VPN Detected. IP Info:\n```Country: {l["country"]}, \nISP: {l["isp"]}, \nASN: {l["as"]}, \nRegion Name: {l["regionName"]}, \nCity: {l["city"]}\n\nType: {iptype}\nAbuse Confidence Score: {score}\nTotal Reports: {reports}```')
 
                 except Exception as e:
-                    print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} An error has occured whilst checking `{ip}`\n{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Info: `{e}`')
-                    await ctx.message.edit(content=f'stxrm >> An error has occured whilst checking `{ip}`, check your console')
+                    print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} An error has occured whilst checking `{string}`\n{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Info: `{e}`')
+                    await ctx.message.edit(content=f'stxrm >> An error has occured whilst checking `{string}`, check your console')
                     
         except Exception as e:
-            print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} An error has occured whilst checking `{ip}`\n{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Info: `{e}`')
-            await ctx.message.edit(content=f'stxrm >> An error has occured whilst checking `{ip}`, check your console')
+            print(f'{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} An error has occured whilst checking `{string}`\n{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Info: `{e}`')
+            await ctx.message.edit(content=f'stxrm >> An error has occured whilst checking `{string}`, check your console')
 
 @bot.command()
 async def geoip(ctx, *, string):
