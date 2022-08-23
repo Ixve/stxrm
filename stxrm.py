@@ -77,6 +77,7 @@ async def commands(ctx):
 {Fore.YELLOW}userinfo (@user){Fore.RED}>> {Fore.WHITE}Gets information about pinged user
 {Fore.YELLOW}proxycheck (ip){Fore.RED}>> {Fore.WHITE}Checks provided IP to see if it is a proxy or VPN
 {Fore.YELLOW}geoip (ip){Fore.RED}>> {Fore.WHITE}Grabs information about given IP
+{Fore.YELLOW}ping (IP/Domain) {Fore.RED}>> {Fore.WHITE}Pings the provided domain/IP
 {Fore.YELLOW}length (string){Fore.RED}>> {Fore.WHITE}Returns the length of a given string
 {Fore.YELLOW}friendbackup {Fore.RED}>> {Fore.WHITE}Backs up a list of all your friends, including blocked users and outgoing friend requests
 {Fore.YELLOW}serverbackup {Fore.RED}>> {Fore.WHITE}Backs up a list of all your servers, including their IDs
@@ -85,6 +86,8 @@ async def commands(ctx):
 {Fore.YELLOW}spamwebhook (amount) (webhook) (message){Fore.RED}>> {Fore.WHITE}Spams provided webhook a certain amount of times with given message
 {Fore.YELLOW}createwebhook {Fore.RED}>> {Fore.WHITE}Creates a new webhook in the channel its executed in, prints the URL in console
 {Fore.YELLOW}deletewebhook (webhook){Fore.RED}>> {Fore.WHITE}Self explanatory, deletes the provided webhook
+{Fore.YELLOW}nukeserver {Fore.RED}>> {Fore.WHITE}Attempts to nuke the server (Requires Administrator permissions)
+{Fore.YELLOW}spacechannel (Channel Name) {Fore.RED}>> {Fore.WHITE}Creates a channel with a space in it
 {Fore.YELLOW}quit {Fore.RED}>> {Fore.WHITE}Self explanatory, quits stxrm
 """)
 
@@ -415,5 +418,49 @@ async def createwebhook(ctx):
         except Exception as e:
             print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} An error has occured whilst trying to create the webhook")
             await ctx.message.edit("stxrm >> An error has occured whilst trying to create the webhook")
+
+@bot.command()
+async def nukeserver(ctx):
+    if str(ctx.message.author) == username:
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Attempting to nuke server")
+        await ctx.message.delete()
+        if ctx.author.guild.permissions.administrator:
+            try:
+                print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Attempting to delete every channel")
+                await channel.delete()
+            except:
+                pass
+            for role in ctx.guild.roles:
+                try:
+                    print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Attempting to delete every role")
+                    await role.delete()
+                except:
+                    pass
+    else:
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Missing permissions")
+        await ctx.send("stxrm >> Missing permissions", delete_after=1s)
+
+@bot.command()
+async def spacechannel(ctx, *, chanName = "Channel Name"):
+    if str(ctx.message.author) == username:
+        chanName = chanName.replace(" ", "ㅤ")
+        await ctx.guild.create_text_channel(name=chanName)
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Made a channel with a space in it successfully")
+        await ctx.message.edit(content="stxrm >> Made channel with space successfully")
+
+@bot.command()
+async def ping(ctx, *, dns):
+    if str(ctx.message.author) == username:
+        await ctx.message.edit(content="stxrm >> Pinging Domain/IP")
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Pinging Domain/IP ({dns})")
+        output = subprocess.run(f"ping {dns}, text=True, stdout=subprocess.PIPE").stdout.splitlines()
+        values = "".join(output[-1:])[4:].split(", ")
+        minimum = values[0][len("Minimum = "):]
+        maximum = values[1][len("Maximum = "):]
+        avg = values[2][len("Average = "):]
+        addy = output[1].replace(f"Pinging {dns} [", "").replace("] with 32 bytes of data:", "")
+        await ctx.message.edit(content=f"stxrm >> Finished pinging {dns}\n```IP: {addy}\nMin: {minimum}\nMax: {maximum}\nAvg: {average}```")
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Finished pinging Domain/IP ({dns})")
+
 
 bot.run(f'{token}', bot=False) 
