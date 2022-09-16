@@ -15,11 +15,14 @@ except Exception as e:
     print(f"Error, a module is missing, info below:\n{e}")
     exit()
 
-token = "Token goes here, obviously"
-proxycheckkey = 'proxycheck.io API Key here (OPTIONAL)'
-abuseipdbkey = 'AbuseIPDB API Key here (OPTIONAL)'
-prefix = ">>"
+#######################################
+token = "Discord Token Here"          #
+proxycheckkey = 'ProxyCheck Key Here' #
+abuseipdbkey = 'AbuseIPDB Key Here'   #
+prefix = ">>"                         #
+#######################################
 
+cwd = os.path.dirname(os.path.realpath(__file__))
 sys.tracebacklimit = 0
 init()
 bot = commands.Bot(prefix, self_bot=True)
@@ -88,6 +91,9 @@ async def commands(ctx):
 {Fore.YELLOW}deletewebhook (webhook){Fore.RED}>> {Fore.WHITE}Self explanatory, deletes the provided webhook
 {Fore.YELLOW}nukeserver {Fore.RED}>> {Fore.WHITE}Attempts to nuke the server (Requires Administrator permissions)
 {Fore.YELLOW}spacechannel (Channel Name) {Fore.RED}>> {Fore.WHITE}Creates a channel with a space in it
+{Fore.YELLOW}getmessage (Message ID){Fore.RED}>> {Fore.WHITE}Gets message via ID in executed channel
+{Fore.YELLOW}ppin (Message ID){Fore.RED}>> {Fore.WHITE}Adds message to personal pins
+{Fore.YELLOW}ppins {Fore.RED}>> {Fore.WHITE}View your personal pins
 {Fore.YELLOW}quit {Fore.RED}>> {Fore.WHITE}Self explanatory, quits stxrm
 """)
 
@@ -438,7 +444,7 @@ async def nukeserver(ctx):
                     pass
     else:
         print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Missing permissions")
-        await ctx.send("stxrm >> Missing permissions", delete_after=1s)
+        await ctx.send("stxrm >> Missing permissions")
 
 @bot.command()
 async def spacechannel(ctx, *, chanName = "Channel Name"):
@@ -462,5 +468,48 @@ async def ping(ctx, *, dns):
         await ctx.message.edit(content=f"stxrm >> Finished pinging {dns}\n```IP: {addy}\nMin: {minimum}\nMax: {maximum}\nAvg: {average}```")
         print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Finished pinging Domain/IP ({dns})")
 
+async def get_message(ctx, msgID):
+    msgHistory = await ctx.channel.history(limit=99999999).flatten()
+    for message in msgHistory:
+        if message.id == msgID:
+            msg = message
+            return msg
+
+@bot.command()
+async def getmessage(ctx, *, msgID: int):
+    if str(ctx.message.author) == username:
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Trying to get message by ID")
+        await ctx.message.edit(content="stxrm >> Trying to get message by ID")
+        msg = await get_message(ctx, msgID)
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Found message by ID")
+        await ctx.message.edit(content=f"stxrm >> Message:\n```Content: {msg}\Message Author: {msg.author}\nLink: {msg.jump_url}```")
+
+@bot.command()
+async def ppins(ctx):
+    if str(ctx.message.author) == username:
+        personalpins = open(f"{cwd}/data/personalpins.txt", 'r').read().splitlines()
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Printed personal pins")
+        await ctx.message.edit(content=f"stxrm >> Personal Pins:\n```{personalpins}```")
+        personalpins.close()
+
+@bot.command()
+async def ppin(ctx, *, msgID: int):
+    if str(ctx.message.author) == username:
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Grabbing message via ID")
+        await ctx.message.edit(content="stxrm >> Attempting to grab message")
+        getmsg = await get_message(ctx, msgID)
+        xi = open(f"{cwd}/data/personalpins.txt", 'r').read().splitlines()
+        xid = 0
+        for line in personalpins:
+            xid += 1
+        xi.close()
+        msg = "{xid} {getmsg}"
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Saving message to data/ppins.txt")
+        await ctx.message.edit(content="stxrm >> Saving to data/ppins.txt")
+        personalpins = open(f"{cwd}/data/personalpins.txt", 'w')
+        personalpins.write(msg)
+        personalpins.close()
+        print(f"{Fore.YELLOW}stxrm {Fore.RED}>>{Fore.WHITE} Successfully saved message to data/ppins.txt")
+        await ctx.message.edit(content="stxrm >> Successfully saved message to data/ppins.txt")
 
 bot.run(f'{token}', bot=False) 
